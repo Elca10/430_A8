@@ -1,3 +1,10 @@
+# PROJECT
+TODO
+- tests
+- AST definition
+- interpreter
+
+
 # FORMATTING
 
 COLUMNS : CONTENT
@@ -20,7 +27,6 @@ Data defined with the following sections: level number, data name, picture claus
 Level Number     Data Name           Picture Clause       Value Clause
 
 Data names must be defined here in order to use them in the procedure division
-
 
 
 
