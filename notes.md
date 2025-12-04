@@ -4,6 +4,12 @@ TODO
 - AST definition
 - interpreter
 
+Run command: cobc -x -o out main.cbl ./out
+
+
+Initially defined AST very simply with no recursion, and only allowing single params and such.
+Then discovered "REDEFINE".
+
 
 # FORMATTING
 
