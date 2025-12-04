@@ -40,6 +40,7 @@
            01 BINDING.
                05 SYM PIC X.
                05 VAL.
+      * 'P' = PrimV, 'N' = NumV, 'B' = BoolV, 'S' = StrV, 'C' = ClovV
                    10 VAL-TAG PIC X.
 
                    10 PRIMV REDEFINES VAL.
@@ -70,7 +71,41 @@
        PROCEDURE DIVISION.
       * This is where program logic goes
       * (Executable statements in our own defined paragraphs and sections)
+           EVAL-VAL.
+               IF VAL-TAG = "P"
+                   PERFORM EVAL-PRIMV
+               ELSE IF VAL-TAG = "N"
+                   PERFORM EVAL-NUMV
+               ELSE IF VAL-TAG = "B"
+                   PERFORM EVAL-BOOLV
+               ELSE IF VAL-TAG = "S"
+                   PERFORM EVAL-STRV
+               ELSE IF VAL-TAG = "C"
+                   PERFORM EVAL-CLOV
+               END-IF.
+               .
            
+           EVAL-PRIMV.
+      * logic for evaluating a primitive value
+           .
+
+           EVAL-NUMV.
+      * logic for evaluating a numeric value
+           .
+
+           EVAL-BOOLV.
+      * logic for evaluating a boolean value
+           .
+
+           EVAL-STRV.
+      * logic for evaluating a string value
+           .
+
+           EVAL-CLOV.
+      * logic for evaluating a closure
+           .
+           
+
            EVAL-EXPR.
                IF EXPR-TAG = "N"
                    PERFORM EVAL-NUM
