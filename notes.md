@@ -7,10 +7,6 @@ TODO
 Run command: cobc -x -o out main.cbl ./out
 
 
-Initially defined AST very simply with no recursion, and only allowing single params and such.
-Then discovered "REDEFINE".
-
-
 # FORMATTING
 
 COLUMNS : CONTENT
@@ -21,6 +17,14 @@ COLUMNS : CONTENT
 12-72   : Statements
 73-80   : As needed
 
+
+SYMBOLS:
+9 : Numeric
+A : Alphabetic
+X : Alphanumeric
+V : Implicit decimal
+S : Sign
+P : Assumed decimal
 
 # DIVISIONS
 
