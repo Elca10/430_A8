@@ -5,7 +5,8 @@
        WORKING-STORAGE SECTION.
         
         01 exprc-storage pic x(1000).
-        
+
+      *redefine reuses same memory
         01 exprc redefines exprc-storage.
             05 exprc-element occurs 100 times.
                 10 exprc-tag pic a.
@@ -65,18 +66,17 @@
     
         01 arg pic 99.
         01 ret pic 99.
-        
-        01 bds-lookup-var pic x.
-        01 bds-loop-counter pic 99.
 
        LOCAL-STORAGE SECTION.
        PROCEDURE DIVISION.
         
         main.
+      *set up top-env
             move 'p' to val-tag of val (1).
             move '+' to primv-val (1).
             move '+' to bds-var (1).
             
+      *{interp {NumC 1}}
             move 'n' to exprc-tag of exprc (1).
             move 1 to numc-val (1).
             move 1 to arg.
@@ -85,7 +85,7 @@
             display val-tag of val (ret).
             display numv-val (ret).
             
-            
+      *{interp {IdC '+}
             move 'i' to exprc-tag of exprc (2).
             move '+' to idc-val (2).
             move 2 to arg.
