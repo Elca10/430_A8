@@ -6,9 +6,9 @@
         
         01 exprc-storage pic x(1000).
 
-      *redefine reuses same memory
-      *that's a problem. It means if we store a strc and then a lambc,
-      *they occupy the same space and gets overwritten...
+      *>redefine reuses same memory
+      *>that's a problem. It means if we store a strc and then a lambc,
+      *>they occupy the same space and gets overwritten...
         01 exprc redefines exprc-storage.
             05 exprc-element occurs 100 times.
                 10 exprc-tag pic a.
@@ -36,8 +36,9 @@
                     15 appc-arg-val pic 99.
                 10 appc-body pic 99.
                 
-                
-        01 val-idx pic 999 value 2.
+
+        *> Start at slot 11 since 1-10 will contain top-env bindings
+        01 val-idx pic 999 value 11.
         01 val-storage pic x(1000).
         
         01 val redefines val-storage.
@@ -49,13 +50,13 @@
                 10 val-tag pic a.
                 10 numv-val pic 9.
       *> x means char, x(n) means string, we want operators to be more
-      *than 1 char long
+      *>than 1 char long
         01 primv redefines val-storage.
             05 primv-element occurs 100 times.
                 10 val-tag pic a.
                 10 primv-val pic x(10).
       *> x means char, x(n) means string, we want parameters to be more
-      *than 1 char long
+      *>than 1 char long
         01 clov redefines val-storage.
             05 clov-element occurs 100 times.
                 10 val-tag pic a.
@@ -78,11 +79,18 @@
         01 arg pic 99.
         01 ret pic 99.
 
+
+        *> Variables for testing
+        01 TEST-NAME        PIC X(40).
+        01 TEST-COUNT       PIC 99 VALUE 0.
+        01 TEST-FAIL-COUNT  PIC 99 VALUE 0.
+
+
        LOCAL-STORAGE SECTION.
        PROCEDURE DIVISION.
         
         main.
-      *set up top-env
+      *>set up top-env
             move 'p' to val-tag of val (1).
 
             move '+' to primv-val (1).
@@ -125,52 +133,18 @@
            move "error" to bds-var (10)
 
             
-      *{interp {NumC 1}}
-            move 'n' to exprc-tag of exprc (1).
-            move 1 to numc-val (1).
-            move 1 to arg.
-            perform interp
-            
-            display val-tag of val (ret).
-            display numv-val (ret).
-            
-      *{interp {IdC '+}
-            move 'i' to exprc-tag of exprc (2).
-            move '+' to idc-val (2).
-            move 2 to arg.
-            perform interp
-            
-            display val-tag of val (ret).
-            display primv-val (ret).
+           *> Run tests for interp
+           PERFORM TEST-NUMC-1
+           PERFORM TEST-NUMC-7
+           PERFORM TEST-IDC-PLUS
+           PERFORM TEST-IDC-MINUS
+           PERFORM TEST-IDC-MULTIPLY
+           PERFORM TEST-IDC-DIVIDE
 
-      *{interp {IdC '-}
-            move 'i' to exprc-tag of exprc (3).
-            move '-' to idc-val (3).
-            move 3 to arg.
-            perform interp
-            
-            display val-tag of val (ret).
-            display primv-val (ret).
+           *> Print summary
+           DISPLAY "Total tests: " TEST-COUNT
+           DISPLAY "Failed tests: " TEST-FAIL-COUNT
 
-      *{interp {IdC '*}
-            move 'i' to exprc-tag of exprc (4).
-            move '*' to idc-val (4).
-            move 4 to arg.
-            perform interp
-            
-            display val-tag of val (ret).
-            display primv-val (ret).
-
-      *{interp {IdC '/}
-            move 'i' to exprc-tag of exprc (5).
-            move '*' to idc-val (5).
-            move 5 to arg.
-            perform interp
-            
-            display val-tag of val (ret).
-            display primv-val (ret).
-
-      * etc....
             
         STOP RUN.
        
@@ -210,6 +184,172 @@
                     add 1 to val-idx
             end-search.
             exit paragraph.
+
+
+        *> Test helpers
+        TEST-PASS.
+            ADD 1 TO TEST-COUNT
+            DISPLAY "PASS: " TEST-NAME
+            EXIT PARAGRAPH.
+
+        TEST-FAIL.
+            ADD 1 TO TEST-COUNT
+            ADD 1 TO TEST-FAIL-COUNT
+            DISPLAY "FAIL: " TEST-NAME
+            EXIT PARAGRAPH.
+
+
+        *> Test definitions
+
+        *> Parse NumC
+        TEST-NUMC-1.
+            MOVE "NumC 1 -> NumV 1" TO TEST-NAME
+
+            *> Build AST at slot 1: {NumC 1}
+            MOVE "n" TO exprc-tag OF exprc (1)
+            MOVE 1   TO numc-val (1)
+
+            *> Call interp on expr index 1
+            MOVE 1 TO arg
+            PERFORM interp
+
+            *> Check result: NumV 1
+            IF val-tag OF val (ret) = "n"
+                AND numv-val (ret) = 1
+                    PERFORM TEST-PASS
+            ELSE
+                PERFORM TEST-FAIL
+            END-IF
+
+            EXIT PARAGRAPH.
+
+
+        TEST-NUMC-7.
+            MOVE "NumC 7 -> NumV 7" TO TEST-NAME
+
+            *> Build AST at slot 2: {NumC 7}
+            MOVE "n" TO exprc-tag OF exprc (2)
+            MOVE 7   TO numc-val (2)
+
+            MOVE 2 TO arg
+            PERFORM interp
+
+            *> Check result: NumV 7
+            IF val-tag OF val (ret) = "n"
+                AND numv-val (ret) = 7
+                    PERFORM TEST-PASS
+            ELSE
+                PERFORM TEST-FAIL
+            END-IF
+
+            EXIT PARAGRAPH.
+
+
+
+        *> Parse IdC
+        TEST-IDC-PLUS.
+            MOVE "IdC + -> PrimV +" TO TEST-NAME
+
+            *> Build AST at slot 3: {IdC "+"}
+            MOVE "i"  TO exprc-tag OF exprc (3)
+            MOVE "+"  TO idc-val (3)
+
+            MOVE 3 TO arg
+            PERFORM interp
+
+            *> Expect: PrimV "+"
+            IF val-tag OF val (ret) = "p"
+                AND primv-val (ret) = "+"
+                    PERFORM TEST-PASS
+            ELSE
+                PERFORM TEST-FAIL
+            END-IF
+
+            EXIT PARAGRAPH.
+        
+
+        TEST-IDC-MINUS.
+            MOVE "IdC - -> PrimV -" TO TEST-NAME
+
+            *> Build AST at slot 4: {IdC "-"}
+            MOVE "i"  TO exprc-tag OF exprc (4)
+            MOVE "-"  TO idc-val (4)
+
+            MOVE 4 TO arg
+            PERFORM interp
+
+            *> Expect: PrimV "-"
+            IF val-tag OF val (ret) = "p"
+                AND primv-val (ret) = "-"
+                    PERFORM TEST-PASS
+            ELSE
+                PERFORM TEST-FAIL
+            END-IF
+
+            EXIT PARAGRAPH.
+
+
+        TEST-IDC-MULTIPLY.
+            MOVE "IdC * -> PrimV *" TO TEST-NAME
+
+            *> Build AST at slot 5: {IdC "*"}
+            MOVE "i"  TO exprc-tag OF exprc (5)
+            MOVE "*"  TO idc-val (5)
+
+            MOVE 5 TO arg
+            PERFORM interp
+
+            *> Expect: PrimV "*"
+            IF val-tag OF val (ret) = "p"
+                AND primv-val (ret) = "*"
+                    PERFORM TEST-PASS
+            ELSE
+                PERFORM TEST-FAIL
+            END-IF
+
+            EXIT PARAGRAPH.
+
+
+        TEST-IDC-DIVIDE.
+            MOVE "IdC / -> PrimV /" TO TEST-NAME
+
+            *> Build AST at slot 6: {IdC "/"}
+            MOVE "i"  TO exprc-tag OF exprc (6)
+            MOVE "/"  TO idc-val (6)
+
+            MOVE 6 TO arg
+            PERFORM interp
+
+            *> Expect: PrimV "/"
+            IF val-tag OF val (ret) = "p"
+                AND primv-val (ret) = "/"
+                    PERFORM TEST-PASS
+            ELSE
+                PERFORM TEST-FAIL
+            END-IF
+
+            EXIT PARAGRAPH.
+
+
+
+
+
+        *> TODO: Once interp-idc is updated to use BoolV for 'true'/'false'
+        *> from bds-val, add test to expect val-tag = 'b' and boolv-val.
+
+
+        *> TODO: Add test for unknown identifier once error prim is implemented
+
+
+
+
+
+
+
+
+
+        
+
             
             
         
