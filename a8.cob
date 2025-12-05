@@ -119,6 +119,7 @@
        STOP RUN.
        
 
+      *arg is the index of the exprc we are evaluating
        interp.
            evaluate exprc-tag of exprc (arg)
                when "n"
@@ -129,9 +130,13 @@
            exit paragraph.
         
        interp-numc.
+      *Create a new numv at the next free val index.
            move 'n' to val-tag of val (val-idx).
+      *initialize new numv's value to numc's value
            move numc-val (arg) to numv-val (val-idx).
+      *return index of new numv
            move val-idx to ret.
+      *update the next free val index
            add 1 to val-idx.
            exit paragraph.
         
