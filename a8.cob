@@ -37,7 +37,7 @@
                 10 appc-body pic 99.
                 
 
-        *> Start at slot 11 since 1-10 will contain top-env bindings
+      *> Start at slot 11 since 1-10 will contain top-env bindings
         01 val-idx pic 999 value 11.
         01 val-storage pic x(1000).
         
@@ -86,8 +86,7 @@
         01 TEST-FAIL-COUNT  PIC 99 VALUE 0.
 
 
-       LOCAL-STORAGE SECTION.
-       PROCEDURE DIVISION.
+        PROCEDURE DIVISION RECURSIVE.
         
         main.
       *>set up top-env
@@ -147,11 +146,36 @@
 
             
         STOP RUN.
+
+        env-extend-many.
+           if params-list = 0
+               move env-ptr to new-env
+               exit paragraph
+           end-if
+
+           move param-list-head(params-list) to this-param
+           move argvals-head(args-list)      to this-val
+     
+           add 1 to env-size
+           move env-size to next-slot
+           move this-param to bds-var(next-slot)
+           move this-val   to bds-val(next-slot)
+     
+           move param-list-tail(params-list) to params-list
+           move argvals-tail(args-list)      to args-list
+     
+           move env-ptr to saved-env-ptr
+           move next-slot to env-ptr
+     
+           perform env-extend-many
+     
+           move env-ptr to new-env
+           move saved-env-ptr to env-ptr
+           exit paragraph.
        
 
         interp.
             evaluate exprc-tag of exprc (arg)
-      *>> TODO: Write functions for missing interps
                 when "n"
                     perform interp-numc
                 when "i"
@@ -164,6 +188,9 @@
                     perform interp-lambc
                 when "a"
                     perform interp-appc
+                when other
+                    display "SHEQ: interp: unknown exprc tag"
+                    move 0 to ret
             end-evaluate.
             exit paragraph.
         
@@ -186,37 +213,79 @@
             exit paragraph.
 
 
-        *> Placeholder: IfC interpreter
         interp-ifc.
-            *> TODO: implement IfC
-            DISPLAY "interp-ifc: not implemented yet".
-            MOVE 0 TO ret
-            EXIT PARAGRAPH.
+           move ifc-test(arg) to arg
+           perform interp
+           move ret to test-ret
 
-        *> Placeholder: StrC interpreter
+           evaluate val-tag(test-ret)
+               when 'b'
+                    if boolv-val(test-ret) = "true"
+                        move ifc-then(arg) to arg
+                        perform interp
+                    else
+                        move ifc-else(arg) to arg
+                        perform interp
+                    end-if
+               when other
+                    display "SHEQ: interp-ifc: test is not a boolean"
+                    move 0 to ret
+           end-evaluate
+           exit paragraph.
+
+
         interp-strc.
-            *> TODO: implement StrC
-            DISPLAY "interp-strc: not implemented yet".
-            MOVE 0 TO ret
+            move 's' to val-tag (val-idx)
+            move strc-val (arg) to strv-val (val-idx)
+            move val-idx to ret
+            add 1 to val-idx
             EXIT PARAGRAPH.
 
-        *> Placeholder: LamC interpreter
         interp-lambc.
-            *> TODO: implement LamC
-            DISPLAY "interp-lambc: not implemented yet".
-            MOVE 0 TO ret
-            EXIT PARAGRAPH.
+            move 'c' to val-tag(val-idx)
+            move lambc-ids(arg) to clov-ids(val-idx)
+            move lambc-body(arg) to clov-body(val-idx)
+            move env-ptr to clov-env(val-idx)
+            move val-idx to ret
+            add 1 to val-idx
+            exit paragraph.
 
-        *> Placeholder: AppC interpreter
         interp-appc.
-            *> TODO: implement AppC
-            DISPLAY "interp-appc: not implemented yet".
-            MOVE 0 TO ret
-            EXIT PARAGRAPH.
+      *> Evaluate the function expression
+           move appc-fexpr(arg) to arg
+           perform interp
+           move ret to f-ret
+
+      *> Evaluate all arguments
+           move appc-args(arg) to arg-list
+           perform interp-args
+           move args-ret to arg-vals
+
+      *> Now dispatch based on function type
+           evaluate val-tag(f-ret)
+               when 'p'
+      *> primitive operation
+                    move primv-val(f-ret) to op
+                    perform eval-prim
+      *> eval-prim sets ret
+
+               when 'c'
+      *> closure call
+                    move clov-body(f-ret) to arg
+                    perform env-extend-many
+                    perform interp
+
+               when other
+                    display "SHEQ: interp-appc: application of non-closure"
+                    move 0 to ret
+
+            end-evaluate
+            exit paragraph.
 
 
 
-        *> Test helpers
+
+      *> Test helpers
         TEST-PASS.
             ADD 1 TO TEST-COUNT
             DISPLAY "PASS: " TEST-NAME
