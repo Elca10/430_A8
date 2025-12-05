@@ -186,6 +186,36 @@
             exit paragraph.
 
 
+        *> Placeholder: IfC interpreter
+        interp-ifc.
+            *> TODO: implement IfC
+            DISPLAY "interp-ifc: not implemented yet".
+            MOVE 0 TO ret
+            EXIT PARAGRAPH.
+
+        *> Placeholder: StrC interpreter
+        interp-strc.
+            *> TODO: implement StrC
+            DISPLAY "interp-strc: not implemented yet".
+            MOVE 0 TO ret
+            EXIT PARAGRAPH.
+
+        *> Placeholder: LamC interpreter
+        interp-lambc.
+            *> TODO: implement LamC
+            DISPLAY "interp-lambc: not implemented yet".
+            MOVE 0 TO ret
+            EXIT PARAGRAPH.
+
+        *> Placeholder: AppC interpreter
+        interp-appc.
+            *> TODO: implement AppC
+            DISPLAY "interp-appc: not implemented yet".
+            MOVE 0 TO ret
+            EXIT PARAGRAPH.
+
+
+
         *> Test helpers
         TEST-PASS.
             ADD 1 TO TEST-COUNT
